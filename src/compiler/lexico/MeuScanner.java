@@ -3,14 +3,17 @@ package compiler.lexico;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import compiler.exceptions.LexicalException;
 
 public class MeuScanner {
 	
 	private char[] content;
+	private char aux;
 	private int estado;
 	private int pos;
+	private ArrayList<String> words = new ArrayList<String>();
 	
 	public MeuScanner(String filename) {
 		try {
@@ -20,6 +23,7 @@ public class MeuScanner {
 			System.out.println(txtConteudo);
 			System.out.println("-----------------");
 			content = txtConteudo.toCharArray();
+			addWords("if", "else", "class", "super", "var", "let", "instanceof", "typeof", "this", "import", "new", "extends", "yield", "void", "interface", "enum", "with", "delete", "debugger", "require", "const", "enum", "in", "for", "of", "while", "do", "switch", "case", "default", "break", "continue", "try", "catch", "throw", "finally", "function", "return", "true", "false", "null");
 			pos=0;
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -37,6 +41,10 @@ public class MeuScanner {
 		estado = 0;
 		while(true) {
 			currentChar = nextChar();
+			if (!(pos >= content.length)) {
+                aux = content[pos];
+            }
+			
 			switch(estado) {
 			case 0:
 				if (isChar(currentChar)) {
@@ -50,7 +58,36 @@ public class MeuScanner {
 				else if(isSpace(currentChar)) {
 					estado = 0;
 				}
+				
+				else if(isDelimiter(currentChar)) {
+					term += currentChar;
+					token = new Token();
+					token.setType(Token.TK_DELIMITER);
+					token.setText(term);
+					return token;
+				}
+				
 				else if(isOperator(currentChar)) {
+					if (currentChar == '=' && aux != '=') {
+                        term += currentChar;
+
+                        token = new Token();
+                        token.setText(term);
+                        token.setType(Token.TK_ASSIGN);
+                        return token;
+                    }
+
+                    if (currentChar == '=' && aux == '=') {
+                        term += currentChar;
+                        currentChar = nextChar();
+                        term += currentChar;
+
+                        token = new Token();
+                        token.setText(term);
+                        token.setType(Token.TK_OPERATOR);
+                        return token;
+                    }
+                    
 					term += currentChar;
 					token = new Token();
 					token.setType(Token.TK_OPERATOR);
@@ -71,10 +108,18 @@ public class MeuScanner {
 				else if(isSpace(currentChar) || isOperator(currentChar) || isEOF(currentChar)) {
 					if (!isEOF(currentChar))
 						back();
+					
+					if(isRW(term)) {
+						token = new Token();
+						token.setType(Token.TK_RESERVED_WORD);
+						token.setText(term);
+						return token;
+					}else {
 					token = new Token();
 					token.setType(Token.TK_IDENTIFIER);
 					token.setText(term);
 					return token;
+					}
 				}
 				else {
 					throw new LexicalException("Malformed IDENTIFIER");
@@ -111,11 +156,26 @@ public class MeuScanner {
 	}
 	
 	private boolean isOperator(char c) {
-		return c == '>' || c == '<' || c == '=' || c=='!';
+		return c == '>' || c == '<' || c == '=' || c=='!' || 
+				c == '+' || c == '-' || c == '*' || c == '/';
 	}
 	
 	private boolean isSpace(char c) {
 		return c == ' ' || c == '\t' || c == '\n' || c == '\r'; 
+	}
+	
+	private boolean isDelimiter(char c) {
+		return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == ';';
+	}
+	
+	private void addWords(String... reserved) {
+		for (String w : reserved) {
+            words.add(w);
+        }
+	}
+	
+	private boolean isRW(String term) {
+		return words.contains(term);
 	}
 	
 	private char nextChar() {
@@ -136,4 +196,5 @@ public class MeuScanner {
 	private boolean isEOF(char c) {
     	return c == '\0';
     }
+	
 }
