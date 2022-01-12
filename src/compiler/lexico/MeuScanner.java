@@ -157,7 +157,7 @@ public class MeuScanner {
 	
 	private boolean isOperator(char c) {
 		return c == '>' || c == '<' || c == '=' || c=='!' || 
-				c == '+' || c == '-' || c == '*' || c == '/';
+				c == '+' || c == '-' || c == '*' || c == '/' || c == '%';
 	}
 	
 	private boolean isSpace(char c) {

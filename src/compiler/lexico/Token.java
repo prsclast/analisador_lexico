@@ -40,6 +40,6 @@ public class Token {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "Token [type=" + type + ", text= " + text + "]";
+		return "Token [type=" + type + ", text=" + text + "]";
 	}
 }
